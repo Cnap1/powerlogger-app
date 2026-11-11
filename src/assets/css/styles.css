@@ -780,16 +780,18 @@ h3 {
 
 .priority-buttons {
     display: flex;
+    flex-wrap: wrap;
     gap: 8px;
     margin-top: 8px;
 }
 
 .priority-btn {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
+    /* One row of equal buttons; on very narrow screens they wrap to 2 x 2 */
+    flex: 1 1 64px;
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
     padding: 10px 12px;
     border: 2px solid #e1e8ed;
     border-radius: 8px;
@@ -813,9 +815,12 @@ h3 {
     background: #ecf0f1; border-color: #95a5a6;
 }
 
+.priority-btn[data-priority="Normal"],
 .priority-btn[data-priority="Medium"] {
     background: #f1c40f; color: white; border-color: #f39c12;
 }
+.priority-btn[data-priority="Normal"]:hover,
+.priority-btn[data-priority="Normal"].active,
 .priority-btn[data-priority="Medium"]:hover,
 .priority-btn[data-priority="Medium"].active {
     background: #f39c12; border-color: #e67e22;
@@ -2311,7 +2316,6 @@ input[type="range"]::-moz-range-thumb {
     
     /* Priority buttons */
     .priority-btn {
-        min-width: calc(25% - 6px);
         font-size: 12px;
         padding: 8px 6px;
     }
@@ -2402,8 +2406,7 @@ input[type="range"]::-moz-range-thumb {
         overflow: hidden; text-overflow: ellipsis;
         min-width: calc(50% - 4px);
     }
-    .priority-btn { 
-        min-width: calc(50% - 4px);
+    .priority-btn {
         font-size: 11px;
         padding: 6px 4px;
     }
