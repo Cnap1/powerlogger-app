@@ -2649,3 +2649,9 @@ button:focus, input:focus, select:focus, textarea:focus {
     border-radius: 6px; padding: 4px 12px; font-weight: 700; cursor: pointer; font-size: 14px;
 }
 .app-toast-btn:hover { background: rgba(143, 211, 255, 0.15); }
+
+/* Settings: auto-save to a file */
+.autosave-box { margin-bottom: 12px; padding: 10px 12px; border: 1px solid #e1e8ed; border-radius: 8px; background: rgba(255, 255, 255, 0.6); }
+.autosave-status { margin: 0 0 8px; }
+.autosave-status.due { color: #e67e22; font-weight: 600; }
+.autosave-box .backup-actions:empty { display: none; }

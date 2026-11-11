@@ -5,6 +5,7 @@ import {initializeDateUtils} from "../utils/date.js";
 import {escapeHtml, displayLabel} from "../utils/common.js";
 import {backupIsDue, downloadBackup, describeLastBackup} from "../utils/backup.js";
 import {reminderIsDue, dismissReminderToday} from "../utils/reminder.js";
+import {autosaveStatus, autosaveFileName, resumeAutosave} from "../utils/autosave.js";
 import {notify, confirmDialog} from "../components/dialog.js";
 import {refreshCurrentPage} from "../utils/app-navigation.js";
 import {readItems, deleteItem, restoreItem, toggleTodoDone, isOverdue, isFinishedTodo, matchesSearch} from "../utils/items.js";
@@ -61,6 +62,8 @@ export function renderHomePage() {
                     <button type="button" id="reminderDismiss" class="btn btn-secondary btn-small">Not today</button>
                 </div>
             </div>` : ""}
+
+            <div id="autosaveBannerSlot"></div>
 
             ${showBackup ? `
             <div class="home-banner backup-banner" role="status">
@@ -226,6 +229,8 @@ export function renderHomePage() {
     dismissReminderToday();
     document.querySelector(".reminder-banner")?.remove();
   });
+  showAutosaveBanner();
+
   document.getElementById("bannerBackup")?.addEventListener("click", () => {
     const count = downloadBackup();
     document.querySelector(".backup-banner")?.remove();
@@ -475,5 +480,31 @@ function attachItemEventListeners() {
       const itemId = parseInt(this.dataset.id);
       navigateTo("edit", itemId);
     });
+  });
+}
+
+/**
+ * After a browser restart Chrome needs one click before the app may write to
+ * the auto-save file again; this banner asks for it.
+ */
+async function showAutosaveBanner() {
+  const slot = document.getElementById("autosaveBannerSlot");
+  if (!slot || (await autosaveStatus()) !== "needs-permission") return;
+  slot.innerHTML = `
+            <div class="home-banner backup-banner" role="status">
+                <span class="banner-text">💽 Auto-save to <strong>${escapeHtml(autosaveFileName() || "")}</strong> is paused until you allow it again.</span>
+                <div class="banner-actions">
+                    <button type="button" id="bannerAutosaveResume" class="btn btn-primary btn-small">▶️ Resume auto-save</button>
+                </div>
+            </div>`;
+  document.getElementById("bannerAutosaveResume").addEventListener("click", async () => {
+    try {
+      if (await resumeAutosave()) {
+        slot.innerHTML = "";
+        notify("✅ Auto-save resumed.");
+      }
+    } catch (error) {
+      notify(`❌ Auto-save: ${error.message}`);
+    }
   });
 }

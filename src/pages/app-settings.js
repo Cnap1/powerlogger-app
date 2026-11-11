@@ -6,6 +6,7 @@ import { validateConfig } from "../utils/data-validation.js";
 import { createMockData } from "../utils/create-mockdata.js";
 import { downloadFile, generateLogseqExport, generateMarkdownExport } from "../utils/data-processing.js";
 import { downloadBackup, describeLastBackup, backupIsDue, parseBackup, restoreBackup, USER_CONFIG_KEY } from "../utils/backup.js";
+import { autosaveStatus, autosaveFileName, chooseAutosaveFile, resumeAutosave, stopAutosave, saveNow } from "../utils/autosave.js";
 import { getReminderSettings, saveReminderSettings, requestReminderPermission } from "../utils/reminder.js";
 import { notify, confirmDialog } from "../components/dialog.js";
 
@@ -46,6 +47,10 @@ export async function renderSettingsPage() {
                 <div class="settings-section${backupDue ? "" : " collapsed"}">
                     <h2>💾 Backup &amp; Restore</h2>
                     <div class="settings-content${backupDue ? "" : " collapsed"}">
+                        <div class="autosave-box" id="autosaveBox">
+                            <p class="autosave-status" id="autosaveStatus">💽 Auto-save to a file: checking…</p>
+                            <div class="backup-actions" id="autosaveActions"></div>
+                        </div>
                         <p class="backup-status${backupDue ? " due" : ""}">
                             Last backup: <strong id="lastBackupText">${describeLastBackup()}</strong>
                             ${backupDue ? " - your data only lives in this browser, download a backup." : ""}
@@ -426,6 +431,9 @@ function initializeSettingsHandlers(localConfig) {
     });
   });
 
+  // ===== Auto-save to a file =====
+  renderAutosaveBox();
+
   // ===== Backup & restore =====
   document.getElementById("downloadBackupBtn").addEventListener("click", () => {
     const count = downloadBackup();
@@ -705,4 +713,58 @@ function plainName(entry) {
   const label = typeof entry === "object" ? entry?.label ?? entry?.key : entry;
   const text = String(label ?? "");
   return text.slice(text.match(/^[^\p{L}\p{N}]*/u)[0].length).trim() || text.trim();
+}
+
+/** Fills the "Auto-save to a file" box in Backup & Restore, based on what the browser allows. */
+async function renderAutosaveBox() {
+  const statusEl = document.getElementById("autosaveStatus");
+  const actions = document.getElementById("autosaveActions");
+  if (!statusEl || !actions) return;
+
+  const state = await autosaveStatus();
+  const name = escapeHtml(autosaveFileName() || "");
+  const texts = {
+    unsupported: "💽 Auto-save to a file is not possible in this browser (it works in Chrome or Edge on a computer). Download a backup regularly instead.",
+    off: "💽 Auto-save is off. Pick a file (for example in OneDrive) and every change is saved to it.",
+    on: `💽 Auto-saving every change to <strong>${name}</strong>.`,
+    "needs-permission": `⚠️ Auto-save to <strong>${name}</strong> is paused: the browser asks for permission again after a restart.`,
+  };
+  statusEl.innerHTML = texts[state];
+  statusEl.classList.toggle("due", state === "needs-permission");
+
+  const buttons = {
+    unsupported: [],
+    off: [["autosaveChoose", "btn-primary", "📁 Choose file…"]],
+    on: [["autosaveSave", "btn-secondary", "💾 Save now"], ["autosaveChoose", "btn-secondary", "📁 Other file…"], ["autosaveStop", "btn-secondary", "Stop"]],
+    "needs-permission": [["autosaveResume", "btn-primary", "▶️ Resume auto-save"], ["autosaveStop", "btn-secondary", "Stop"]],
+  };
+  actions.innerHTML = buttons[state]
+    .map(([id, cls, label]) => `<button type="button" id="${id}" class="btn ${cls}">${label}</button>`)
+    .join("");
+
+  const run = (id, action) =>
+    document.getElementById(id)?.addEventListener("click", async () => {
+      try {
+        await action();
+      } catch (error) {
+        if (error?.name !== "AbortError") notify(`❌ Auto-save: ${error.message}`); // AbortError = picker cancelled
+      }
+      renderAutosaveBox();
+      const last = document.getElementById("lastBackupText");
+      if (last) last.textContent = describeLastBackup();
+    });
+
+  run("autosaveChoose", async () => {
+    if (await chooseAutosaveFile()) notify(`✅ Auto-save on: changes are saved to ${autosaveFileName()}.`);
+  });
+  run("autosaveSave", async () => {
+    notify((await saveNow()) ? "✅ Saved to file." : "❌ Could not save to the file.");
+  });
+  run("autosaveResume", async () => {
+    if (await resumeAutosave()) notify("✅ Auto-save resumed.");
+  });
+  run("autosaveStop", async () => {
+    await stopAutosave();
+    notify("Auto-save stopped. The file stays on disk.");
+  });
 }

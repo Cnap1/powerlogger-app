@@ -2,6 +2,7 @@
 import { navigateTo } from './src/utils/app-navigation.js';
 import { initTopNav } from './src/components/top-nav.js';
 import { startReminderWatcher } from './src/utils/reminder.js';
+import { startAutosave } from './src/utils/autosave.js';
 import { validateConfig, normalizeItemKeys } from './src/utils/data-validation.js';
 
 const CONFIG_URL = './src/config/appconfig.json';
@@ -225,6 +226,7 @@ async function initializeApp() {
         startReminderWatcher(() => navigateTo('add', null, 'mood'));
         registerServiceWorker();
         requestPersistentStorage();
+        startAutosave(); // keeps the chosen file on disk up to date (Chrome/Edge)
 
         console.log('✅ PowerLogger initialized successfully');
     } catch (error) {

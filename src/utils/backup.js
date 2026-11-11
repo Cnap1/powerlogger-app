@@ -60,9 +60,14 @@ export function describeLastBackup() {
   return `${days} days ago`;
 }
 
+/** Days between backup reminders: 14 with auto-save to a file, daily without it. */
+export function backupReminderDays() {
+  return localStorage.getItem("powerloggerAutosave") ? BACKUP_REMINDER_DAYS : 1;
+}
+
 /** True when there is data and the last backup is missing or older than the reminder period */
 export function backupIsDue() {
-  return readItems().length > 0 && daysSinceBackup() >= BACKUP_REMINDER_DAYS;
+  return readItems().length > 0 && daysSinceBackup() >= backupReminderDays();
 }
 
 /**
