@@ -1,0 +1,220 @@
+{
+  "areas": [
+    { "key": "personal", "label": "Personal", "shortcode": "PERS", "emoji": "👤" },
+    { "key": "work", "label": "Work", "shortcode": "WORK", "emoji": "💼" },
+    { "key": "social", "label": "Relationships", "shortcode": "RELA", "emoji": "❤️" },
+    { "key": "learning", "label": "Learning", "shortcode": "KNOW", "emoji": "🎓" },
+    { "key": "other", "label": "Other", "shortcode": "OTHR", "emoji": "📦" }
+  ],
+  "entryTypes": [
+    { "key": "note", "label": "Note", "shortcode": "LOG", "emoji": "📝" },
+    { "key": "mood", "label": "Mood", "shortcode": "ZEN", "emoji": "🧠" },
+    { "key": "todo", "label": "Todo", "shortcode": "FUT", "emoji": "✅" },
+    { "key": "journal", "label": "Journal", "shortcode": "JNL", "emoji": "📓" },
+    { "key": "meeting", "label": "Meeting", "shortcode": "MNG", "emoji": "📅" },
+    { "key": "project", "label": "Project", "shortcode": "PRJ", "emoji": "📂" },
+    { "key": "template", "label": "Template", "shortcode": "TMP", "emoji": "🗂️" }
+  ],
+  "categoriesByArea": {
+    "personal": [
+      { "key": "observation", "label": "👀 Observation", "emoji": "👀" },
+      { "key": "thought", "label": "💭 Thought", "emoji": "💭" },
+      { "key": "idea", "label": "💡 Idea", "emoji": "💡" },
+      { "key": "problem", "label": "❓ Problem", "emoji": "❓" },
+      { "key": "solution", "label": "✔️ Solution", "emoji": "✔️" },
+      { "key": "decision", "label": "🗳️ Decision", "emoji": "🗳️" },
+      { "key": "memory", "label": "🧠 Memory", "emoji": "🧠" }
+    ],
+    "work": [
+      { "key": "performance", "label": "📈 Performance" },
+      { "key": "meetings", "label": "📅 Meetings" },
+      { "key": "projects", "label": "📂 Projects" },
+      { "key": "decisions", "label": "🗳️ Decisions" },
+      { "key": "strategy", "label": "📊 Strategy" },
+      { "key": "client-work", "label": "🤝 Client Work" },
+      { "key": "admin", "label": "🗂️ Admin" },
+      { "key": "troubleshooting", "label": "🛠️ Troubleshooting" },
+      { "key": "improvements", "label": "⚙️ Improvements" },
+      { "key": "resources", "label": "📚 Resources" },
+      { "key": "team", "label": "👥 Team" },
+      { "key": "roadmapping", "label": "🗺️ Roadmapping" }
+    ],
+    "learning": [
+      { "key": "insights", "label": "🔍 Insights" },
+      { "key": "research", "label": "📖 Research" },
+      { "key": "ideas", "label": "💡 Ideas" },
+      { "key": "programming", "label": "💻 Programming" },
+      { "key": "languages", "label": "🌍 Languages" },
+      { "key": "concepts", "label": "📘 Concepts" },
+      { "key": "skills", "label": "🛠️ Skills" },
+      { "key": "knowledge-base", "label": "📚 Knowledge Base" }
+    ],
+    "other": [
+      { "key": "general", "label": "📌 General" }
+    ],
+    "social": [
+      { "key": "friendship", "label": "🤝 Friendship" },
+      { "key": "family", "label": "👪 Family" }
+    ]
+  },
+  "journalTypes": ["Today (short)", "Today (long)", "Weekly Review", "Monthly Review", "Yearly Review"],
+  "todoStatuses": ["TODO", "DOING", "BLOCKED", "DONE", "CANCELLED"],
+  "tags": [
+    "important",
+    "urgent",
+    "reference",
+    "follow-up",
+    "completed",
+    "blocked",
+    "in-progress",
+    "review",
+    "inspiration",
+    "actionable",
+    "daily",
+    "weekly",
+    "monthly",
+    "quarterly",
+    "habit",
+    "goal",
+    "milestone",
+    "insight",
+    "pattern",
+    "trend",
+    "growth",
+    "connection",
+    "creative",
+    "solution"
+  ],
+  "journalTemplates": {
+      "Today (short)": [
+        { "title": "Gratitude", "icon": "🙏", "rows": 2 },
+        { "title": "Goals & Aspirations", "icon": "🎯", "rows": 2 },
+        { "title": "Events & Experiences", "icon": "✨", "rows": 2 },
+        { "title": "Emotions & Mood", "icon": "💗", "rows": 2 },
+        { "title": "Personal Growth & Insights", "icon": "💭", "rows": 2 },
+        { "title": "Health & Wellness", "icon": "🌱", "rows": 2 },
+        { "title": "Relationships & Connections", "icon": "👥", "rows": 2 },
+        { "title": "Problem-solving & Challenges", "icon": "🧠", "rows": 2 },
+        { "title": "Creative Ideas", "icon": "🎨", "rows": 2 }
+      ],
+      "Today (long)": [
+        { 
+          "title": "Gratitude", 
+          "icon": "🙏", 
+          "rows": 4,
+          "prompts": ["Things you're grateful for", "Why you're thankful", "Other points of gratitude", "Both big and small aspects"]
+        },
+        { 
+          "title": "Goals & Aspirations", 
+          "icon": "🎯", 
+          "rows": 4,
+          "prompts": ["Short-term & long-term goals", "Break down larger goals", "Track progress and adjust", "Actionable steps"]
+        },
+        { 
+          "title": "Events & Experiences", 
+          "icon": "✨", 
+          "rows": 4,
+          "prompts": ["Key events of the day", "Significant conversations", "Memorable moments", "New experiences"]
+        },
+        { 
+          "title": "Emotions & Mood", 
+          "icon": "💗", 
+          "rows": 4,
+          "prompts": ["How you're feeling and why", "Emotional patterns over time", "Strategies for difficult emotions", "Mood tracking"]
+        },
+        { 
+          "title": "Personal Growth & Insights", 
+          "icon": "💭", 
+          "rows": 4,
+          "prompts": ["Lessons from recent experiences", "Areas for self-improvement", "Personal breakthroughs", "Realizations"]
+        },
+        { 
+          "title": "Health & Wellness", 
+          "icon": "🌱", 
+          "rows": 3,
+          "prompts": ["Physical symptoms, exercise, diet", "Sleep patterns and energy", "Health-related goals"]
+        },
+        { 
+          "title": "Relationships & Connections", 
+          "icon": "👥", 
+          "rows": 4,
+          "prompts": ["Interactions with others", "Relationship dynamics", "Nurturing connections", "Social experiences"]
+        },
+        { 
+          "title": "Problem-solving & Challenges", 
+          "icon": "🧠", 
+          "rows": 4,
+          "prompts": ["Obstacles you're facing", "Potential solutions", "Problem-solving outcomes", "Brainstorming ideas"]
+        },
+        { 
+          "title": "Creative Ideas", 
+          "icon": "🎨", 
+          "rows": 3,
+          "prompts": ["Inspirations for projects", "Creative pursuits", "Artistic thoughts"]
+        }
+      ],
+      "Weekly Review": [
+        { "title": "Week Highlights", "icon": "⭐", "rows": 4 },
+        { "title": "Challenges & Solutions", "icon": "🎯", "rows": 3 },
+        { "title": "Lessons Learned", "icon": "📚", "rows": 3 }
+      ],
+      "Monthly Review": [
+        { "title": "Monthly Achievements", "icon": "🏆", "rows": 5 },
+        { "title": "Goal Progress", "icon": "📈", "rows": 4 },
+        { "title": "Next Month Focus", "icon": "🔮", "rows": 3 }
+      ]
+  },
+  "moodCategories": [
+    "Morning",
+    "Work session", 
+    "Fit",
+    "Social",
+    "Evening"
+  ],
+  "todoCategories": [
+    "purchase",
+    "contact", 
+    "fix",
+    "plan",
+    "research",
+    "organize",
+    "create",
+    "review",
+    "schedule",
+    "follow-up"
+  ],
+  "priorities": {
+    "default": [
+      { "value": "Normal", "emoji": "➖", "label": "Normal" },
+      { "value": "Important", "emoji": "⬆️", "label": "Important" }, 
+      { "value": "Crucial", "emoji": "❗", "label": "Crucial" }
+    ],
+    "todo": [
+      { "value": "Low", "emoji": "⬇️", "label": "Low" },
+      { "value": "Normal", "emoji": "➖", "label": "Normal" },
+      { "value": "High", "emoji": "⬆️", "label": "High" },
+      { "value": "Critical", "emoji": "❗", "label": "Critical" }
+    ]
+  },
+  "templates": {
+    "Journal - Personal": "Personal Journal Template",
+    "Todo - Work": "Work Task Template", 
+    "Meeting - Work": "Meeting Notes Template",
+    "Note - Learning": "Research Template"
+  },
+  "defaultSettings": {
+    "autoSave": true,
+    "showMoodTrends": true,
+    "dailyReflectionReminder": true,
+    "exportFormat": "markdown",
+    "defaultArea": "personal",
+    "defaultType": "note"
+  },
+  "fieldIds": {
+    "title": "itemTitle",
+    "content": "itemContent",
+    "tags": "itemTags",
+    "todoDateGroup": "todoDateGroup",
+    "journalInterface": "journalInterface"
+  }
+}

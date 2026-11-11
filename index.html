@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>PowerLogger - Mood Tracker</title>
+    <meta
+      name="description"
+      content="Private mood tracker and personal log - your data stays on your device."
+    />
+    <link rel="stylesheet" href="./src/assets/css/styles.css" />
+
+    <!-- Installable app (PWA) -->
+    <link rel="manifest" href="./manifest.json" />
+    <meta name="theme-color" content="#667eea" />
+    <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png" />
+    <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="PowerLogger" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  </head>
+  <body>
+    <!-- Shared top bar (back + menu), filled by src/components/top-nav.js -->
+    <nav id="topNav" class="top-nav" aria-label="Main"></nav>
+
+    <!-- Main app container - content rendered dynamically by app.js -->
+    <div id="app">
+      <!-- Loading state -->
+      <div class="container">
+        <h1>Loading...</h1>
+        <div style="text-align: center; color: #7f8c8d">
+          <p>Initializing PowerLogger App</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scripts -->
+    <!-- Chart.js 4.4.1 (global `Chart`), bundled locally so charts work offline -->
+    <script src="./src/vendor/chart.umd.min.js"></script>
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
