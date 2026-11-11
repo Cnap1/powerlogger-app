@@ -1,7 +1,7 @@
 // PowerLogger service worker: makes the app work offline.
 // Strategy: network first (so updates show up immediately), cache as fallback.
 // Bump CACHE_VERSION when the list of files changes.
-const CACHE_VERSION = "powerlogger-v4";
+const CACHE_VERSION = "powerlogger-v5";
 
 const APP_FILES = [
   "./",
@@ -30,6 +30,7 @@ const APP_FILES = [
   "./src/utils/data-processing.js",
   "./src/utils/data-validation.js",
   "./src/utils/date.js",
+  "./src/utils/items.js",
   "./src/utils/reminder.js",
   "./src/vendor/chart.umd.min.js",
   "./icons/apple-touch-icon.png",

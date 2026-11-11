@@ -58,3 +58,14 @@ export function goBack() {
   current = previous;
   renderPage(previous.page, previous.args);
 }
+
+/**
+ * Draws the current page again (e.g. after Undo changed the data), keeping
+ * the scroll position and without adding a history step.
+ */
+export function refreshCurrentPage() {
+  const { page, args } = current || { page: "home", args: [] };
+  const scroll = window.scrollY;
+  renderPage(page, args);
+  window.scrollTo(0, scroll);
+}

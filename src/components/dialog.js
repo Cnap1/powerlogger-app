@@ -50,9 +50,10 @@ export function confirmDialog(message, { okLabel = "OK", cancelLabel = "Cancel",
  * Shows a short message at the bottom of the screen. It stays visible across
  * page changes and disappears by itself (tap to close sooner).
  * @param {string} message - Text; a leading ❌ shows it as an error.
- * @param {{duration?: number}} [options]
+ * @param {{duration?: number, action?: {label: string, onClick: Function}}} [options]
+ *   action: a button in the message (e.g. Undo); clicking it runs onClick and closes the message.
  */
-export function notify(message, { duration } = {}) {
+export function notify(message, { duration, action } = {}) {
   let area = document.getElementById("appToasts");
   if (!area) {
     area = document.createElement("div");
@@ -64,13 +65,28 @@ export function notify(message, { duration } = {}) {
   }
   const text = String(message ?? "");
   const toast = document.createElement("div");
-  toast.className = "app-toast" + (text.startsWith("❌") ? " app-toast-error" : "");
-  toast.textContent = text;
+  toast.className = "app-toast" + (text.startsWith("❌") ? " app-toast-error" : "") + (action ? " app-toast-action" : "");
+  const textEl = document.createElement("span");
+  textEl.textContent = text;
+  toast.appendChild(textEl);
+
+  const remove = () => toast.remove();
+  if (action) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "app-toast-btn";
+    btn.textContent = action.label;
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      remove();
+      action.onClick();
+    });
+    toast.appendChild(btn);
+  }
   area.appendChild(toast);
 
-  // Longer messages stay up a little longer
-  const ms = duration ?? Math.min(9000, 2500 + text.length * 40);
-  const remove = () => toast.remove();
+  // Longer messages stay up a little longer; give time to reach an action button
+  const ms = duration ?? Math.min(9000, (action ? 6000 : 2500) + text.length * 40);
   toast.addEventListener("click", remove);
   setTimeout(remove, ms);
 }

@@ -2,7 +2,8 @@
 
 import { initializeForms, generateJournal, moodContent } from '../components/forms.js';
 import { Buttons } from '../components/buttons.js';
-import { navigateTo, goBack } from '../utils/app-navigation.js';
+import { navigateTo, goBack, refreshCurrentPage } from '../utils/app-navigation.js';
+import { deleteItem, restoreItem } from '../utils/items.js';
 import { initializeUIComponents } from '../components/ui.js';
 import { displayLabel, escapeHtml, kindField, kindOptions } from '../utils/common.js';
 import { moodEditorHTML, initMoodEditor, readMoodEditor } from '../components/mood-editor.js';
@@ -291,13 +292,13 @@ function initializeEditHandlers(item, items, config) {
 
     // Delete button
     document.getElementById('deleteItem')?.addEventListener('click', async function() {
-        if (await confirmDialog('Delete this item? This cannot be undone.', { okLabel: 'Delete', danger: true })) {
-            const itemIndex = items.findIndex(i => i.id === item.id);
-            if (itemIndex !== -1) {
-                items.splice(itemIndex, 1);
-                localStorage.setItem('logseqItems', JSON.stringify(items));
-                notify('Item deleted successfully!');
+        if (await confirmDialog('Delete this item?', { okLabel: 'Delete', danger: true })) {
+            const removed = deleteItem(item.id);
+            if (removed) {
                 goBack();
+                notify('🗑️ Item deleted.', {
+                    action: { label: 'Undo', onClick: () => { restoreItem(removed); refreshCurrentPage(); notify('↩️ Item restored.'); } },
+                });
             }
         }
     });

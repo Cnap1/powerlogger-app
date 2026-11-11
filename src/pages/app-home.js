@@ -6,12 +6,18 @@ import {escapeHtml, displayLabel} from "../utils/common.js";
 import {backupIsDue, downloadBackup, describeLastBackup} from "../utils/backup.js";
 import {reminderIsDue, dismissReminderToday} from "../utils/reminder.js";
 import {notify, confirmDialog} from "../components/dialog.js";
+import {refreshCurrentPage} from "../utils/app-navigation.js";
+import {readItems, deleteItem, restoreItem, toggleTodoDone, isOverdue, isFinishedTodo, matchesSearch} from "../utils/items.js";
 
 // Initialize date utilities
 const {getTimeAgo, getTodayStreak} = initializeDateUtils();
 
 // "Later" on the backup banner hides it until the app is reopened
 let backupBannerDismissed = false;
+
+// Recent Items filters, sort and search; kept while the app is open so a
+// redraw (after delete, Undo or ticking a todo) does not reset them
+const recentState = { area: "", type: "", order: "desc", query: "" };
 
 /**
  * Renders the home page of the application.
@@ -27,6 +33,7 @@ export function renderHomePage() {
   const stats = getAppStats(items);
   const todayItems = getTodayItems(items);
   const pendingTodos = getPendingTodos(items);
+  const overdueTodos = items.filter((item) => isOverdue(item));
   const week = getWeeklyMoodSummary(items);
   const showReminder = reminderIsDue();
   const showBackup = !backupBannerDismissed && backupIsDue();
@@ -61,6 +68,14 @@ export function renderHomePage() {
                 <div class="banner-actions">
                     <button type="button" id="bannerBackup" class="btn btn-primary btn-small">Download backup</button>
                     <button type="button" id="bannerBackupLater" class="btn btn-secondary btn-small">Later</button>
+                </div>
+            </div>` : ""}
+
+            ${overdueTodos.length ? `
+            <div class="home-banner overdue-banner" role="status">
+                <span class="banner-text">⚠️ <strong>${overdueTodos.length}</strong> overdue todo${overdueTodos.length === 1 ? "" : "s"}.</span>
+                <div class="banner-actions">
+                    <button type="button" id="showOverdue" class="btn btn-primary btn-small">Show todos</button>
                 </div>
             </div>` : ""}
 
@@ -102,6 +117,10 @@ export function renderHomePage() {
                                 <button id="statsButton" class="btn btn-primary btn-small">📊 View Stats</button>
                             </div>
                         </div>
+                        <div class="recent-search">
+                            <input type="search" id="recentSearch" class="recent-search-input" placeholder="🔍 Search title, content, tags, mood…"
+                                   value="${escapeHtml(recentState.query)}" aria-label="Search recent items" autocomplete="off">
+                        </div>
 
                         <div class="table-responsive recent-scroll">
                         <table class="items-table">
@@ -111,7 +130,7 @@ export function renderHomePage() {
                                         <select id="recentAreaFilter" class="th-filter" aria-label="Filter by area">
                                             <option value="">Area ▾</option>
                                             ${(window.appConfig?.areas || [])
-                                              .map((area) => `<option value="${escapeHtml(area.key)}">${displayLabel(area)}</option>`)
+                                              .map((area) => `<option value="${escapeHtml(area.key)}" ${recentState.area === area.key ? "selected" : ""}>${displayLabel(area)}</option>`)
                                               .join("")}
                                         </select>
                                     </th>
@@ -119,20 +138,20 @@ export function renderHomePage() {
                                         <select id="recentTypeFilter" class="th-filter" aria-label="Filter by type">
                                             <option value="">Type ▾</option>
                                             ${(window.appConfig?.entryTypes || [])
-                                              .map((type) => `<option value="${escapeHtml(type.key)}">${displayLabel(type)}</option>`)
+                                              .map((type) => `<option value="${escapeHtml(type.key)}" ${recentState.type === type.key ? "selected" : ""}>${displayLabel(type)}</option>`)
                                               .join("")}
                                         </select>
                                     </th>
                                     <th class="title-col">Title</th>
                                     <th class="content-col">Content</th>
-                                    <th class="time-col" aria-sort="descending">
-                                        <button type="button" id="recentTimeSort" class="th-sort" data-order="desc" title="Sort by date">Time ▼</button>
+                                    <th class="time-col" aria-sort="${recentState.order === "asc" ? "ascending" : "descending"}">
+                                        <button type="button" id="recentTimeSort" class="th-sort" data-order="${recentState.order}" title="Sort by date">Time ${recentState.order === "asc" ? "▲" : "▼"}</button>
                                     </th>
                                     <th class="actions-col">Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="recentItemsBody">
-                                ${renderRecentItems(items)}
+                                ${renderRecentItems(items, recentState)}
                             </tbody>
                         </table>
                     </div>
@@ -226,37 +245,52 @@ export function renderHomePage() {
     btn.addEventListener("click", () => navigateTo("add", null, btn.dataset.type));
   });
 
-  // Area / Type column header filters
+  // Overdue banner: show the todos in Recent Items
+  document.getElementById("showOverdue")?.addEventListener("click", () => {
+    Object.assign(recentState, { area: "", type: "todo", query: "" });
+    renderHomePage();
+    document.querySelector(".recent-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+
+  // Area / Type header filters, Time sort and search
   const areaFilter = document.getElementById("recentAreaFilter");
   const typeFilter = document.getElementById("recentTypeFilter");
   const timeSort = document.getElementById("recentTimeSort");
-  const applyRecentFilters = () => {
-    const tbody = document.getElementById("recentItemsBody");
-    if (!tbody) return;
-    const filters = { area: areaFilter.value, type: typeFilter.value, order: timeSort?.dataset.order || "desc" };
-    tbody.innerHTML = renderRecentItems(items, filters);
-    areaFilter.classList.toggle("active", !!filters.area);
-    typeFilter.classList.toggle("active", !!filters.type);
-    const shown = tbody.querySelectorAll("tr[data-id]").length;
-    document.getElementById("recentCount").textContent =
-      shown === items.length ? `(${items.length})` : `(${shown} of ${items.length})`;
-    attachItemEventListeners(); // Re-attach listeners after content update
-  };
-  areaFilter?.addEventListener("change", applyRecentFilters);
-  typeFilter?.addEventListener("change", applyRecentFilters);
+  const search = document.getElementById("recentSearch");
+  areaFilter?.addEventListener("change", () => { recentState.area = areaFilter.value; applyRecentFilters(); });
+  typeFilter?.addEventListener("change", () => { recentState.type = typeFilter.value; applyRecentFilters(); });
   // Time header: newest first (▼) <-> oldest first (▲)
   timeSort?.addEventListener("click", () => {
-    const order = timeSort.dataset.order === "desc" ? "asc" : "desc";
-    timeSort.dataset.order = order;
-    timeSort.textContent = order === "desc" ? "Time ▼" : "Time ▲";
-    timeSort.title = order === "desc" ? "Newest first (click for oldest first)" : "Oldest first (click for newest first)";
-    timeSort.closest("th")?.setAttribute("aria-sort", order === "desc" ? "descending" : "ascending");
+    recentState.order = recentState.order === "desc" ? "asc" : "desc";
+    const desc = recentState.order === "desc";
+    timeSort.dataset.order = recentState.order;
+    timeSort.textContent = desc ? "Time ▼" : "Time ▲";
+    timeSort.title = desc ? "Newest first (click for oldest first)" : "Oldest first (click for newest first)";
+    timeSort.closest("th")?.setAttribute("aria-sort", desc ? "descending" : "ascending");
     applyRecentFilters();
   });
+  let searchTimer = null;
+  search?.addEventListener("input", () => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => { recentState.query = search.value; applyRecentFilters(); }, 150);
+  });
 
-  if (items.length > 0) {
-    attachItemEventListeners();
-  }
+  if (items.length > 0) applyRecentFilters();
+}
+
+/** Redraws the Recent Items rows from the stored entries and the current filters/search. */
+function applyRecentFilters() {
+  const tbody = document.getElementById("recentItemsBody");
+  if (!tbody) return;
+  const items = readItems();
+  tbody.innerHTML = renderRecentItems(items, recentState);
+  document.getElementById("recentAreaFilter")?.classList.toggle("active", !!recentState.area);
+  document.getElementById("recentTypeFilter")?.classList.toggle("active", !!recentState.type);
+  document.getElementById("recentSearch")?.classList.toggle("active", !!recentState.query.trim());
+  const shown = tbody.querySelectorAll("tr[data-id]").length;
+  const count = document.getElementById("recentCount");
+  if (count) count.textContent = shown === items.length ? `(${items.length})` : `(${shown} of ${items.length})`;
+  attachItemEventListeners(); // Re-attach listeners after content update
 }
 
 // Helper functions
@@ -339,61 +373,71 @@ function getAreaEmoji(area) {
   return areaConfig?.emoji || "📁";
 }
 
+/** Todos that still need doing (not DONE or CANCELLED) */
 function getPendingTodos(items) {
-  return items.filter(
-    (item) =>
-      item.type === "todo" && item.deadline && item.deadline !== "NO_DEADLINE"
-  );
-
-  // Helper function to get pending todos
-
-  //
+  return items.filter((item) => item.type === "todo" && !isFinishedTodo(item));
 }
 
-function deleteItem(itemId) {
-  const items = JSON.parse(localStorage.getItem("logseqItems") || "[]");
-  const filteredItems = items.filter((item) => item.id !== itemId);
-  localStorage.setItem("logseqItems", JSON.stringify(filteredItems));
+/** "due today", "2 days overdue", "due in 3 days" for a todo deadline */
+function describeDeadline(item) {
+  if (!item.deadline || item.deadline === "NO_DEADLINE") return "";
+  const due = new Date(item.deadline);
+  if (Number.isNaN(due.getTime())) return "";
+  const DAY = 24 * 60 * 60 * 1000;
+  const startOfDay = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+  const days = Math.round((startOfDay(due) - startOfDay(new Date())) / DAY);
+  if (isOverdue(item)) {
+    return days < 0 ? `${-days} day${days === -1 ? "" : "s"} overdue` : "overdue";
+  }
+  if (days === 0) return "due today";
+  if (days === 1) return "due tomorrow";
+  return days > 1 ? `due in ${days} days` : "";
 }
 
-/** All items, sorted by date (order "desc" = newest first), optionally filtered by { area, type } */
-function renderRecentItems(items, { area = "", type = "", order = "desc" } = {}) {
+/**
+ * Rows for Recent Items: filtered by { area, type, query }, sorted by date
+ * (order "desc" = newest first).
+ */
+function renderRecentItems(items, { area = "", type = "", order = "desc", query = "" } = {}) {
   const filteredItems = items.filter(
-    (item) => (!area || item.area === area) && (!type || item.type === type)
+    (item) => (!area || item.area === area) && (!type || item.type === type) && matchesSearch(item, query)
   );
 
   if (filteredItems.length === 0) {
-    return `<tr class="empty-row"><td colspan="6">No items match these filters.</td></tr>`;
+    return `<tr class="empty-row"><td colspan="6">${query.trim() ? "Nothing found for this search." : "No items match these filters."}</td></tr>`;
   }
 
   return [...filteredItems]
     .sort((a, b) => (new Date(b.createdAt) - new Date(a.createdAt)) * (order === "asc" ? -1 : 1))
-    .map(
-      (item) => `
-            <tr data-id="${item.id}">
+    .map((item) => {
+      const isTodo = item.type === "todo";
+      const done = isTodo && item.status === "DONE";
+      const overdue = isOverdue(item);
+      const deadlineText = isTodo && !isFinishedTodo(item) ? describeDeadline(item) : "";
+      const rowClass = [done ? "todo-done" : "", overdue ? "todo-overdue" : ""].filter(Boolean).join(" ");
+      return `
+            <tr data-id="${item.id}"${rowClass ? ` class="${rowClass}"` : ""}>
                 <td class="area-cell" title="${escapeHtml(getAreaLabel(item.area))}">${getAreaEmoji(item.area)}</td>
                 <td class="type-cell" title="${escapeHtml(getTypeLabel(item.type))}">${getTypeEmoji(item.type)}</td>
                 <td class="title-cell">
                     <button class="title-link" data-id="${item.id}" title="Open to edit">
                         ${escapeHtml(
                           item.type === "mood"
-                            ? (item.mood?.emoji || "🤔") +
-                              " " +
-                              (item.mood?.secondary || "Mood")
+                            ? (item.mood?.emoji || "🤔") + " " + (item.mood?.secondary || "Mood")
                             : item.title
                         )}
                     </button>
+                    ${deadlineText ? `<span class="deadline-badge${overdue ? " overdue" : ""}">⏰ ${deadlineText}</span>` : ""}
                 </td>
                 <td class="content-cell" title="${escapeHtml(item.content)}">${escapeHtml((item.content || "").replace(/\s+/g, " "))}</td>
                 <td class="date-cell">${getTimeAgo(item.createdAt)}</td>
                 <td class="actions-cell">
-                    <button class="delete-item btn-sm" data-id="${
-                      item.id
-                    }" title="Delete">×</button>
+                    ${isTodo ? `<button type="button" class="todo-done-btn btn-sm${done ? " checked" : ""}" data-id="${item.id}"
+                        aria-pressed="${done}" title="${done ? "Done (click to reopen)" : "Mark as done"}">${done ? "☑" : "☐"}</button>` : ""}
+                    <button type="button" class="delete-item btn-sm" data-id="${item.id}" title="Delete">×</button>
                 </td>
-            </tr>
-        `
-    )
+            </tr>`;
+    })
     .join("");
 }
 
@@ -402,10 +446,25 @@ function attachItemEventListeners() {
     button.addEventListener("click", async function (e) {
       e.stopPropagation();
       const itemId = parseInt(this.dataset.id);
-      if (await confirmDialog("Delete this item? This cannot be undone.", { okLabel: "Delete", danger: true })) {
-        deleteItem(itemId);
+      if (await confirmDialog("Delete this item?", { okLabel: "Delete", danger: true })) {
+        const removed = deleteItem(itemId);
+        if (!removed) return;
         renderHomePage();
+        notify("🗑️ Item deleted.", {
+          action: { label: "Undo", onClick: () => { restoreItem(removed); refreshCurrentPage(); notify("↩️ Item restored."); } },
+        });
       }
+    });
+  });
+
+  // Tick a todo done (or reopen it)
+  document.querySelectorAll(".todo-done-btn").forEach((button) => {
+    button.addEventListener("click", function (e) {
+      e.stopPropagation();
+      const status = toggleTodoDone(parseInt(this.dataset.id));
+      if (!status) return;
+      renderHomePage(); // updates the row, the pending count and the overdue banner
+      notify(status === "DONE" ? "✅ Todo done." : "↩️ Todo reopened.");
     });
   });
 
@@ -418,4 +477,3 @@ function attachItemEventListeners() {
     });
   });
 }
-

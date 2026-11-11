@@ -2611,3 +2611,38 @@ button:focus, input:focus, select:focus, textarea:focus {
 }
 .app-toast-error { background: #c0392b; }
 @keyframes app-toast-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+/* Recent Items: search */
+.recent-search { margin: 0 0 10px; }
+.recent-search-input {
+    width: 100%; box-sizing: border-box; padding: 10px 12px; font-size: 15px;
+    border: 1px solid #d5dde5; border-radius: 8px; background: white;
+}
+.recent-search-input:focus { outline: none; border-color: #3498db; box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.15); }
+.recent-search-input.active { border-color: #3498db; background: #f4f9fd; }
+
+/* Todos: done toggle, deadline badge, overdue */
+.overdue-banner { background: #fdecea; border: 1px solid #f5c2bd; color: #8a2b20; }
+.actions-cell .todo-done-btn {
+    background: white; color: #27ae60; border: 1px solid #27ae60; margin-right: 4px;
+    font-size: 15px; line-height: 1;
+}
+.actions-cell .todo-done-btn:hover { background: #eafaf1; }
+.actions-cell .todo-done-btn.checked { background: #27ae60; color: white; }
+.todo-done .title-link { text-decoration: line-through; color: #95a5a6; }
+.todo-done .content-cell { color: #b0b8bf; }
+.deadline-badge {
+    display: inline-block; margin-left: 6px; padding: 1px 6px; border-radius: 10px;
+    font-size: 11px; font-weight: 600; background: #eef2f5; color: #5d6d7e; white-space: nowrap;
+}
+.deadline-badge.overdue { background: #fdecea; color: #c0392b; }
+.todo-overdue td:first-child { box-shadow: inset 3px 0 0 #e74c3c; }
+
+/* Message with a button (e.g. Undo) */
+.app-toast-action { display: flex; align-items: center; gap: 12px; text-align: left; }
+.app-toast-action span { flex: 1; }
+.app-toast-btn {
+    background: transparent; color: #8fd3ff; border: 1px solid rgba(143, 211, 255, 0.6);
+    border-radius: 6px; padding: 4px 12px; font-weight: 700; cursor: pointer; font-size: 14px;
+}
+.app-toast-btn:hover { background: rgba(143, 211, 255, 0.15); }
